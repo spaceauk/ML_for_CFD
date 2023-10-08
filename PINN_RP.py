@@ -1,3 +1,4 @@
+import os
 import math
 import torch
 import torch.nn as nn
@@ -25,16 +26,16 @@ while True:
         else:
             print("Invalid input. Please choose 1 to 4.")
     except ValueError:
-        print("Invalid input. Please enter a number (1 to 3).")
+        print("Invalid input. Please enter a number (1 to 4).")
 while True:
     try: 
-        ICtype = int(input("Choose initial conditions type (1 to 8): "))
+        ICtype = int(input("Choose initial conditions type (1 to 5): "))
         if ICtype in range(1,9):
             break
         else:
-            print("Invalid input. Please choose 1 to 6.")
+            print("Invalid input. Please choose 1 to 5.")
     except ValueError:
-        print("Invalid input. Please enter a number between 1 to 6.")
+        print("Invalid input. Please enter a number between 1 to 5.")
 # Weights for different types of loss (W-PINNs)
 w_PDE = 0.1
 w_IC = 10.0
@@ -48,7 +49,7 @@ while True:
             print("Invalid input. Please choose 1 to 4.")
     except ValueError:
         print("Invalid input. Please enter a number (1 to 4).")
-discontC_type = int(input("Types of mod to PINN to account for discontinuity (1 to 3):  "))
+discontC_type = int(input("Types of mod to PINN to account for discontinuity (1 to 3) else no mod:  "))
 xmax = 1.0
 xmin = 0.0
 if (discontC_type==1): 
@@ -317,7 +318,7 @@ model = DNN().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 # Function for training PINNs
-def train(epoch):
+def train(epoch,start_epoch):
     model.train()
     def closure():
         # Clear previously computed gradients
@@ -343,15 +344,16 @@ def train(epoch):
     plt.title('Training')
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
-    plt.plot(loss_ic_track,color='r',label='Loss IC')
-    plt.plot(loss_pde_track,color='b',label='Loss PDE')
-    plt.plot(loss_track,color='k',label='Total Loss')
+    epochX = range(start_epoch,len(loss_ic_track)+start_epoch) 
+    plt.plot(epochX,loss_ic_track,color='r',label='Loss IC')
+    plt.plot(epochX,loss_pde_track,color='b',label='Loss PDE')
+    plt.plot(epochX,loss_track,color='k',label='Total Loss')
     if (len(loss_track)==1): plt.legend()
     if (len(loss_track)>=100):
         plt.subplot(1,2,2).cla()
         plt.subplot(1,2,2)
         plot_st = len(loss_track)-100
-        pcount = range(plot_st,len(loss_track))
+        pcount = range(plot_st+start_epoch,len(loss_track)+start_epoch)
         plt.plot(pcount,np.log(loss_ic_track[plot_st:]),color='r',label='Loss IC')
         plt.plot(pcount,np.log(loss_pde_track[plot_st:]),color='b',label='Loss PDE')
         plt.plot(pcount,np.log(loss_track[plot_st:]),color='k',label='Total Loss')
@@ -360,11 +362,43 @@ def train(epoch):
     plt.pause(0.001)
 
 
+# Load the saved checkpoint
+while True:
+    contOLD = input('Continue from previous checkpoint? (y/n):')
+    try:
+        if contOLD in ['y','n']:
+            break
+        else:
+            print('Invalid input. Please choose y or n.')
+    except ValueError:
+        print('Invalid input type: {}'.format(type(contOLD)))
+if (os.path.exists('model_checkpoint.pth') and contOLD == 'y'):
+    checkpoint = torch.load('model_checkpoint.pth')
+    start_epoch = int(checkpoint['epoch'] + 1)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    loss_ic_track.append(checkpoint['loss_ic'])
+    loss_pde_track.append(checkpoint['loss_pde'])
+    loss_track.append(checkpoint['loss_overall'])
+else:
+    print('Restart training.')
+    start_epoch = 1
 # Start training and compute total time for training
 print('Begin training ...')
 tic = time.time()
-for epoch in range(1, epochs+1):
-    train(epoch)
+for epoch in range(start_epoch, epochs+start_epoch):
+    train(epoch,start_epoch)
+
+    # Save the model and optimizer state as before
+    checkpoint = {
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss_ic': loss_ic_track[len(loss_ic_track)-1],
+            'loss_pde': loss_pde_track[len(loss_pde_track)-1],
+            'loss_overall': loss_track[len(loss_track)-1],        
+            }
+    torch.save(checkpoint,'model_checkpoint.pth')
 toc = time.time()
 print(f'Overall training time = {toc - tic}')
 plt.savefig('train_plot.png')

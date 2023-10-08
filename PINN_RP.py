@@ -59,7 +59,7 @@ elif (discontC_type==2):
     print("PINNs-WE: based on compressibility - div(u)<0")
     eps2 = 1.0
 elif (discontC_type==3):
-    print("Steep gradient-based magnitude adjustment for compressibility-activated reduced loss weight")
+    print("Steep gradient-based magnitude adjustment for compressibility-activated loss weight reduction")
     alphaGA = [1.0,1.0,1.0]
     betaGA = [1.0,1.0,1.0]
 else:
@@ -94,7 +94,7 @@ class DNN(nn.Module):
     # Loss function for PDE
     def loss_pde(self, x):
         y = self.net(x)                                                # Forward pass of NN
-        rho,p,u = y[:, 0:1], y[:, 1:2], y[:, 2:]                       # Output of NN
+        rho,u,p = y[:, 0:1], y[:, 1:2], y[:, 2:]                       # Output of NN
 
         # Gradients and partial derivatives
         drho_grad = gradients(rho, x)[0]                        
@@ -136,7 +136,7 @@ class DNN(nn.Module):
     # Loss function for initial condition
     def loss_ic(self, x_ic, rho_ic, u_ic, p_ic):
         y_ic = self.net(x_ic)                                           
-        rho_ic_nn, p_ic_nn,u_ic_nn = y_ic[:, 0], y_ic[:, 1], y_ic[:, 2]            
+        rho_ic_nn, u_ic_nn,p_ic_nn = y_ic[:, 0], y_ic[:, 1], y_ic[:, 2]            
 
         # Calculate loss for the initial condition
         loss_ics = ((u_ic_nn - u_ic)**2).mean() + \
@@ -229,7 +229,7 @@ device = torch.device('cpu')
 lr = 0.0005                                            # Learning rate             
 num_x = 2**6                                                        
 num_t = num_x                                                   
-epochs = 2000                                          # Number of iterations
+epochs = 25000                                         # Number of iterations
 num_i_train = 1000                                     # Number of samples for training                
 num_int_train = 11000                                               
 if (ICtype==1):

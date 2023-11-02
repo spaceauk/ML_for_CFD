@@ -10,6 +10,8 @@ The objective of this project is to improve PINNs ability to solve discontinuiti
 2. PINNs-WE [2]: Reduced loss weight at regions with negative dilatation
 3. Compressibility-activated loss weight reduction depending on gradients of primitive variables at localized regions
 
+## 1) Modeless RANS using Physics-Informed Neural Networks (PINNs)
+Here, the Reynolds shear stress is estimated using PINNs instead of being modeled through traditional approaches like the Boussinesq hypothesis. This approach is applied to a turbulent channel flow test case.
 
 ### References
 [1] https://arxiv.org/pdf/2305.08448.pdf <br>

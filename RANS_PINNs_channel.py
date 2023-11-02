@@ -1,27 +1,15 @@
 import os
 import math as m
 import numpy as np
-import pandas as pd
-import requests
 
 import torch
 import torch.nn as nn
 
-import scipy.interpolate as int1d
-from scipy.sparse import *
-from scipy.linalg.lapack  import  dgtsv  as  lapack_dgtsv
-from scipy.integrate import cumtrapz, trapz
-
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
-
 import time, sys
-
 import matplotlib.pyplot as plt
-from matplotlib import rc, rcParams
-import matplotlib.ticker as ticker
 
 ########################################################################################################
-#                                               Try PINNs                                              #
+#                                                 PINNs                                                #
 ########################################################################################################
 # Define fluid properties - air taken for this case
 rho = 1.225
@@ -37,9 +25,7 @@ class DNN(nn.Module):
         self.net = nn.Sequential()
 
         # Input (x,y) --> Output (U,V,P,uu,uv,vv)
-        # Constants:
-        #           - rho (incompressible)
-        #           - nu (depends on fluid properties)
+        # Constants: rho, nu
         self.net.add_module('Linear_layer_1',nn.Linear(2,numNN))
         self.net.add_module('Tanh_layer_1',nn.Tanh())
         for num in range(2,numlayers):
@@ -158,7 +144,7 @@ id_f = np.random.choice(len(Y),num_f_train,replace=True)
 # At inlet
 x_bc = x_grid[1:ny-2,0][:,None]
 y_bc = y_grid[1:ny-2,0][:,None]
-y_bc_train = np.hstack((x_bc,y_bc))   # Random (x,y) - vectorized
+y_bc_train = np.hstack((x_bc,y_bc))   
 # At wall boundary condition
 x_wall = np.hstack((x_grid[0,:],x_grid[ny-1,:]))[:,None]
 y_wall = np.hstack((y_grid[0,:],y_grid[ny-1,:]))[:,None]
@@ -166,7 +152,7 @@ wall_bc = np.hstack((x_wall,y_wall))
 x_inner = np.hstack((x_grid[1,:],x_grid[ny-2,:]))[:,None]
 y_inner = np.hstack((y_grid[1,:],y_grid[ny-2,:]))[:,None]
 inner_layer = np.hstack((x_inner,y_inner))
-plt.figure() # YH to check!!!
+plt.figure() 
 plt.plot(X,Y,'.',color='g')
 plt.plot(x_wall,y_wall,'x',color='r')
 plt.plot(x_bc,y_bc,'.',color='b')

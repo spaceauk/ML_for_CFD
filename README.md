@@ -1,4 +1,4 @@
-# Applying machine learning techniques for CFD
+# Applying machine learning techniques for CFD 
 
 ## 1) Physics-Informed Neural Networks (PINNs) for hyperbolic PDEs
 Here, PINN works by taking in (x,t) domain as input and produces (\rho,u,p) as outputs. 

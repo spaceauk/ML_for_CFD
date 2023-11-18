@@ -93,7 +93,7 @@ class DNN(nn.Module):
         f_wall = ((U_wall_nn + U_il)**2).mean() + ((V_wall_nn + V_il)**2).mean() + \
                  ((uu_wall_nn + uu_il)**2).mean() + ((uv_wall_nn + uv_il)**2).mean() + \
                  ((vv_wall_nn + vv_il)**2).mean()
-        f_bcs = f_inlet + f_wall
+        f_bcs = f_inlet + 20.*f_wall
         return f_bcs
 
 # Calculate gradients using torch.autograd.grad
